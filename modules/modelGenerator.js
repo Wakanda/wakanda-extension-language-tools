@@ -40,7 +40,7 @@ exports.generateModel = function(dataclasses){
 };
 
 exports.generateDS = function(dataclasses){
-	
+
 	var dsTemplate        = "\
 interface GeneratedDataStore extends Datastore {\n\
 	{{dataclasses}}\n\
@@ -48,40 +48,41 @@ interface GeneratedDataStore extends Datastore {\n\
 declare var ds : GeneratedDataStore;\n\n";
 
 	var dataclassTemplate = "\
-interface DS{{dataclass}} extends DatastoreClass {\n\
-	createEntity() : DS{{dataclass}}Entity;\n\
-	find(queryString: String, ...valueList: any[]) : DS{{dataclass}}Entity;\n\
-	first() : DS{{dataclass}}Entity;\n\
-	all() : DS{{dataclass}}EntityCollection;\n\
-	query(queryString: String, ...valueList: any[]) : DS{{dataclass}}EntityCollection;\n\
-	fromArray(arrayValues: any[]) : DS{{dataclass}}EntityCollection;\n\
-	orderBy(attributeList: String, sortOrder?: String) : DS{{dataclass}}EntityCollection;\n\
-	orderBy(attributeList: DatastoreClassAttribute, sortOrder?: String) : DS{{dataclass}}EntityCollection;\n\
-	createEntityCollection(keepSorted?: String) : DS{{dataclass}}EntityCollection;\n\
-	createEntityCollection(keepSorted?: Boolean) : DS{{dataclass}}EntityCollection;\n\
-	forEach(callbackFn: (entity : DS{{dataclass}}Entity)=>void) : void;\n\
+interface __DS{{dataclass}} extends DatastoreClass {\n\
+	createEntity() : __DS{{dataclass}}Entity;\n\
+	new() : __DS{{dataclass}}Entity;\n\
+	find(queryString: String, ...valueList: any[]) : __DS{{dataclass}}Entity;\n\
+	first() : __DS{{dataclass}}Entity;\n\
+	all() : __DS{{dataclass}}EntityCollection;\n\
+	query(queryString: String, ...valueList: any[]) : __DS{{dataclass}}EntityCollection;\n\
+	fromArray(arrayValues: any[]) : __DS{{dataclass}}EntityCollection;\n\
+	orderBy(attributeList: String, sortOrder?: String) : __DS{{dataclass}}EntityCollection;\n\
+	orderBy(attributeList: __DatastoreClassAttribute, sortOrder?: String) : __DS{{dataclass}}EntityCollection;\n\
+	createEntityCollection(keepSorted?: String) : __DS{{dataclass}}EntityCollection;\n\
+	createEntityCollection(keepSorted?: Boolean) : __DS{{dataclass}}EntityCollection;\n\
+	forEach(callbackFn: (entity : __DS{{dataclass}}Entity)=>void) : void;\n\
 }\n\n";
 
 	var entityTemplate    = "\
-interface DS{{dataclass}}Entity extends Entity{\n\
+interface __DS{{dataclass}}Entity extends Entity{\n\
 	\t{{attributes}}\n\
 }\n\n";
 
 	var entityCollectionTemplate    = "\
-interface DS{{dataclass}}EntityCollection extends EntityCollection{\n\
-	and(collection2: DS{{dataclass}}EntityCollection) : DS{{dataclass}}EntityCollection;\n\
-	minus(collection2: DS{{dataclass}}EntityCollection) : DS{{dataclass}}EntityCollection;\n\
-	or(collection2: DS{{dataclass}}EntityCollection) : DS{{dataclass}}EntityCollection;\n\
-	orderBy(attributeList: String, sortOrder?: String) : DS{{dataclass}}EntityCollection;\n\
-	orderBy(attributeList: DatastoreClassAttribute, sortOrder?: String) : DS{{dataclass}}EntityCollection;\n\
-	query(queryString: String, ...valueList: any[]) : DS{{dataclass}}EntityCollection;\n\
-	find(queryString: String, ...valueList: any[]) : DS{{dataclass}}Entity;\n\
-	first() : DS{{dataclass}}Entity;\n\
-	forEach(callbackFn: (entity : DS{{dataclass}}Entity)=>void) : void;\n\
-	[index : number] : DS{{dataclass}}Entity;\n\
+interface __DS{{dataclass}}EntityCollection extends EntityCollection{\n\
+	and(collection2: __DS{{dataclass}}EntityCollection) : __DS{{dataclass}}EntityCollection;\n\
+	minus(collection2: __DS{{dataclass}}EntityCollection) : __DS{{dataclass}}EntityCollection;\n\
+	or(collection2: __DS{{dataclass}}EntityCollection) : __DS{{dataclass}}EntityCollection;\n\
+	orderBy(attributeList: String, sortOrder?: String) : __DS{{dataclass}}EntityCollection;\n\
+	orderBy(attributeList: DatastoreClassAttribute, sortOrder?: String) : __DS{{dataclass}}EntityCollection;\n\
+	query(queryString: String, ...valueList: any[]) : __DS{{dataclass}}EntityCollection;\n\
+	find(queryString: String, ...valueList: any[]) : __DS{{dataclass}}Entity;\n\
+	first() : __DS{{dataclass}}Entity;\n\
+	forEach(callbackFn: (entity : __DS{{dataclass}}Entity)=>void) : void;\n\
+	[index : number] : __DS{{dataclass}}Entity;\n\
 }\n\n";
 
-	var dsDataClassesTemplate = "\t{{dataclass}} : DS{{dataclass}};\n";
+	var dsDataClassesTemplate = "\t{{dataclass}} : __DS{{dataclass}};\n";
 
 	var dsContent         = "";
 	var entities          = "";

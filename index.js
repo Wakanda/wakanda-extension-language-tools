@@ -120,7 +120,9 @@ actions.onAutoComplete = function(message){
     //LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
 
     //LOG_LEVEL_INFO && log("< actions.onAutoComplete");
-
+    
+    response.completion = filterCompletion(response.completion);
+    
     return response;
 };
 
@@ -335,4 +337,18 @@ function skipFile(params){
     }
     
     return false;
+}
+
+function filterCompletion(list){
+    var filterdList = [];
+    
+    list.forEach(function(element){
+        
+        if(element.text.indexOf("__DS") !== 0){
+            
+            filterdList.push(element);
+        }
+    });
+   
+    return filterdList;
 }
