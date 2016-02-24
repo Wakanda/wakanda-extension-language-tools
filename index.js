@@ -97,6 +97,11 @@ actions.onAutoComplete = function(message){
         return;
     }
     
+    // no autocompletion for json files
+    if(path.substr(-5) === '.json') {
+      return;
+    }
+
     var context   = message.source.data[0];
     var line      = parseInt(message.source.data[3]);
     var character = parseInt(message.source.data[4]);
