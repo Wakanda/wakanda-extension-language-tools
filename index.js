@@ -97,6 +97,11 @@ actions.onAutoComplete = function(message){
         return;
     }
     
+    // no autocompletion for json files
+    if(path.substr(-5) === '.json') {
+      return;
+    }
+
     var context   = message.source.data[0];
     var line      = parseInt(message.source.data[3]);
     var character = parseInt(message.source.data[4]);
@@ -120,7 +125,9 @@ actions.onAutoComplete = function(message){
     //LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
 
     //LOG_LEVEL_INFO && log("< actions.onAutoComplete");
-
+    
+    response.completion = filterCompletion(response.completion);
+    
     return response;
 };
 
@@ -335,4 +342,18 @@ function skipFile(params){
     }
     
     return false;
+}
+
+function filterCompletion(list){
+    var filterdList = [];
+    
+    list.forEach(function(element){
+        
+        if(element.text.indexOf("__DS") !== 0){
+            
+            filterdList.push(element);
+        }
+    });
+   
+    return filterdList;
 }

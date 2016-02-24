@@ -199,6 +199,10 @@ function getAutoCompletion(options)
         }
     }
 
+    completion.completion = completion.completion.filter(function(element) {
+        return element.text.indexOf('__DS') !== 0;
+    });
+
     return completion;
 }
 
@@ -339,4 +343,3 @@ function requireModule(relPath)
   
   return require(path);
 }
-
