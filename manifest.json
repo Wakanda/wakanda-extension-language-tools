@@ -1,7 +1,8 @@
 {
 	"extension": {
 		"name": "wakanda-extension-language-tools",
-		"version": "1.0.0",
+		"version": "1.1.0",
+		"minStudioVersion": "1.1.0",
 		"description": "Autocompletion, Syntax & Semantic checking, Goto Definiton and more..",
 		"icon": "icon.png",
 		"actions": [
@@ -16,6 +17,12 @@
 				"title": "onCheckSyntax",
 				"targets":	[ { "uti": "com.netscape.javascript-source" }],
 				"trigger": [ { "event": "onCheckSyntax" } ]
+			},
+			{
+				"name": "onGoToDefinition",
+				"title": "onGotoDefinition",
+				"targets":	[ { "uti": "com.netscape.javascript-source" }],
+				"trigger": [ { "event": "onGotoDefinition" } ]
 			},
             {
                 "name": "initAutoComplete",
