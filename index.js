@@ -86,6 +86,20 @@ actions.onSolutionBeforeClosing = function(message){
     return true;
 };
 
+function uselessCompletion(str, pos){
+
+    if (pos == 0)
+        return true;
+
+    if (pos > str.length)
+        pos = str.length;
+
+    if ((str[pos - 1] == "\t") || (str[pos - 1] == " ") || str[pos - 1] == ";")
+       return true;
+
+    return false;
+}
+
 actions.onAutoComplete = function(message){
     //LOG_LEVEL_INFO && log("****************************");
     //LOG_LEVEL_INFO && log("> actions.onAutoComplete");
@@ -105,7 +119,14 @@ actions.onAutoComplete = function(message){
     var context   = message.source.data[0];
     var line      = parseInt(message.source.data[3]);
     var character = parseInt(message.source.data[4]);
-    var project   = getProjectPath();
+    var lineContent = message.source.data[5];
+
+    // useless to ask autocomplete for an empty line (empty or contains only tabs and/or spaces)
+    // or just after a blank or a ;
+    if (uselessCompletion(lineContent, character))
+        return;
+
+    var project = getProjectPath();
     var request   = {
         action : "autocomplete",
         data : {
@@ -119,15 +140,55 @@ actions.onAutoComplete = function(message){
     };
 
     //LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
-
+    
     var response = sendRequest(request);
 
     //LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
 
     //LOG_LEVEL_INFO && log("< actions.onAutoComplete");
-    
+        
     response.completion = filterCompletion(response.completion);
-    
+        
+    return response;
+};
+
+actions.onGoToDefinition = function(message){
+    var path      = message.source.data[1];    
+    //var content   = message.source.data[2];
+    var content = studio.currentEditor.getContent();
+
+    if(skipFile({ path : path, content: content })) {
+        return;
+    }
+    var selectionInfo = studio.currentEditor.getSelectionInfo();
+    var line = selectionInfo.firstLineIndex;
+    var character = selectionInfo.firstLineOffset;
+    var context   = message.source.data[0];
+
+    //var line      = parseInt(message.source.data[3]);
+    //var character = parseInt(message.source.data[4]);
+
+    var project = getProjectPath();
+    var request = {
+        action: 'gotodefinition',
+        data: {
+            project : project,
+            context : context,
+            path : path,
+            content : content,
+            line : line,
+            character : character
+        }
+    };
+
+    var response = sendRequest(request);
+
+    // filter internal definitions
+    if(response && response.length) {
+        response = response.filter(function(res) {
+            return res.path !== '__!!MODEL!!__.d.ts';
+        });
+    }
     return response;
 };
 

@@ -41,6 +41,9 @@ onconnect = function(event){
                 case 'autocomplete':
                         response = getAutoCompletion(options);
                     break;
+                case 'gotodefinition':
+                    response = getGoToDefinition(options);
+                    break;
                 case 'errors':
                         response = getErrors(options);
                     break;
@@ -204,6 +207,35 @@ function getAutoCompletion(options)
     });
 
     return completion;
+}
+
+function getGoToDefinition(options) {
+    var isModelContext  = parseFloat(options.context, 10) === 4;
+    var script          = getScript(options, isModelContext);
+    var languageService = script.languageService;
+	var path 		    = options.path;
+	var line 		    = options.line;
+	var character 	    = options.character;
+	var project 	    = options.project;
+
+    loadFile(options, script.host);
+    var sourceFile  = languageService.getSourceFile(path);
+    var position    = TS.getPositionOfLineAndCharacter(sourceFile, line, character);
+    var results     = languageService.getDefinitionAtPosition(path, position);
+
+    var responses = [];
+    (results || []).forEach(function(result) {
+        // check if the file is in the project path
+        if(result.fileName.indexOf(project) === 0) {
+             responses.push({
+                path: result.fileName.substr(project.length),
+                offset: result.textSpan.start,
+                length: 0
+            });
+        }
+    });
+
+    return responses;
 }
 
 function priorityToRealElements(entries)
