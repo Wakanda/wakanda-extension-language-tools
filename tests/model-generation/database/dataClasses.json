@@ -1,0 +1,94 @@
+[
+    {
+        "name": "Company",
+        "className": "Company",
+        "collectionName": "CompanyCollection",
+        "scope": "public",
+        "attributes": [
+            {
+                "name": "ID",
+                "kind": "storage",
+                "scope": "public",
+                "unique": true,
+                "autosequence": true,
+                "type": "long",
+                "primKey": true
+            },
+            {
+                "name": "name",
+                "kind": "storage",
+                "scope": "public",
+                "type": "string"
+            },
+            {
+                "name": "logo",
+                "kind": "storage",
+                "scope": "public",
+                "type": "image"
+            },
+            {
+                "name": "employees",
+                "kind": "relatedEntities",
+                "scope": "public",
+                "type": "EmployeeCollection",
+                "reversePath": true,
+                "path": "company"
+            }
+        ]
+    },
+    {
+        "name": "Employee",
+        "className": "Employee",
+        "collectionName": "EmployeeCollection",
+        "scope": "public",
+        "attributes": [
+            {
+                "name": "ID",
+                "kind": "storage",
+                "scope": "public",
+                "unique": true,
+                "autosequence": true,
+                "type": "long",
+                "primKey": true
+            },
+            {
+                "name": "fname",
+                "kind": "storage",
+                "scope": "public",
+                "type": "string"
+            },
+            {
+                "name": "lname",
+                "kind": "storage",
+                "scope": "public",
+                "type": "string"
+            },
+            {
+                "name": "photo",
+                "kind": "storage",
+                "scope": "public",
+                "type": "image"
+            },
+            {
+                "name": "contract",
+                "kind": "storage",
+                "scope": "public",
+                "type": "blob"
+            },
+            {
+                "name": "dob",
+                "kind": "storage",
+                "scope": "public",
+                "type": "date",
+                "simpleDate": false
+            },
+            {
+                "name": "company",
+                "kind": "relatedEntity",
+                "scope": "public",
+                "type": "Company",
+                "path": "Company"
+            }
+        ]
+    }
+]

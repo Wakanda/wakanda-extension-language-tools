@@ -19,90 +19,90 @@
 * THE SOFTWARE.
 */
 
+/**
+ * DEBUG Configuration
+ */
 var debug             = false;
 var LOG_LEVEL_VERBOSE = false;
 var LOG_LEVEL_INFO    = false;
 var LOG_LEVEL_ERROR   = false;
 
-var CONFIG       = {};
-var actions      = {};
-var rootPath     = studio.extension.getFolder().path;
+var CONFIG          = {};
+var actions         = {};
+var extensionPath   = studio.extension.getFolder().path;
 
-/*
+/**
  * Configuration
  */
 CONFIG.MAX_LENGTH     = 80 * 100;
-CONFIG.MAX_WAIT       = 500;
 CONFIG.MAX_WAIT_DEBUG = 5000;
 
-/*
+CONFIG.MAX_WAIT = {
+    autocomplete  : 600,
+    gotodefinition : 2000,
+    errors : 2000
+};
+
+/**
  * Entry Point For All Actions
  */
 exports.handleMessage = function handleMessage(message){
     var startDate   = new Date();
     var action      = message.action;
-
-    if( action )
-    {
-        var result = actions[action](message);
+    
+    LOG_LEVEL_INFO && log("****************************************");
+    
+    if( action ) {
+        
+        try {
+            var result = actions[action](message);
+        } catch(e) {
+            studio.log(e.toString());
+        }
+        
         var endDate = new Date();
 
-        //LOG_LEVEL_INFO && log(action + " executed in " + (endDate - startDate).toString() + "ms" );
-
+        LOG_LEVEL_INFO && log(action + " executed in " + (endDate - startDate).toString() + "ms" );
+        
         return result;
-    }
-    else
-    {
+    } else {
         return false;
     }
 };
 
-/*
+/**
  * Actions
  */
 actions.initAutoComplete = function(message){
-    //LOG_LEVEL_INFO && log("****************************");
-    //LOG_LEVEL_INFO && log("> actions.initAutoComplete");
-
+    LOG_LEVEL_INFO && log("> actions.initAutoComplete");
+    
     var response = sendRequest({
         action : "init",
         data : {
-            rootPath : rootPath,
+            extensionPath : extensionPath,
             solutionPath : studio.currentSolution.getSolutionFile().parent.path
         }
     });
-
-    //LOG_LEVEL_INFO && log("< actions.initAutoComplete");
+    
+    LOG_LEVEL_INFO && log("< actions.initAutoComplete");
 
     return true;
 };
 
-actions.onSolutionBeforeClosing = function(message){
-
+actions.onSolutionBeforeClosing = function(message){    
+    LOG_LEVEL_INFO && log("> actions.onSolutionBeforeClosing");
+    
     var response = sendRequest({
         action : "close"
     });
+    
+    LOG_LEVEL_INFO && log("< actions.onSolutionBeforeClosing");
 
     return true;
 };
 
-function uselessCompletion(str, pos){
-
-    if (pos == 0)
-        return true;
-
-    if (pos > str.length)
-        pos = str.length;
-
-    if ((str[pos - 1] == "\t") || (str[pos - 1] == " ") || str[pos - 1] == ";")
-       return true;
-
-    return false;
-}
-
 actions.onAutoComplete = function(message){
-    //LOG_LEVEL_INFO && log("****************************");
-    //LOG_LEVEL_INFO && log("> actions.onAutoComplete");
+    LOG_LEVEL_INFO && log("> actions.onAutoComplete");
 
     var path      = message.source.data[1];    
     var content   = message.source.data[2];
@@ -123,8 +123,9 @@ actions.onAutoComplete = function(message){
 
     // useless to ask autocomplete for an empty line (empty or contains only tabs and/or spaces)
     // or just after a blank or a ;
-    if (uselessCompletion(lineContent, character))
+    if (uselessCompletion(lineContent, character)){
         return;
+    }        
 
     var project = getProjectPath();
     var request   = {
@@ -139,20 +140,20 @@ actions.onAutoComplete = function(message){
         }
     };
 
-    //LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
+    LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
     
     var response = sendRequest(request);
 
-    //LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
+    LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
 
-    //LOG_LEVEL_INFO && log("< actions.onAutoComplete");
-        
-    response.completion = filterCompletion(response.completion);
+    LOG_LEVEL_INFO && log("< actions.onAutoComplete");
         
     return response;
 };
 
 actions.onGoToDefinition = function(message){
+    LOG_LEVEL_INFO && log("> actions.onGoToDefinition");
+    
     var path      = message.source.data[1];    
     //var content   = message.source.data[2];
     var content = studio.currentEditor.getContent();
@@ -161,9 +162,9 @@ actions.onGoToDefinition = function(message){
         return;
     }
     var selectionInfo = studio.currentEditor.getSelectionInfo();
-    var line = selectionInfo.firstLineIndex;
-    var character = selectionInfo.firstLineOffset;
-    var context   = message.source.data[0];
+    var line          = selectionInfo.firstLineIndex;
+    var character     = selectionInfo.firstLineOffset;
+    var context       = message.source.data[0];
 
     //var line      = parseInt(message.source.data[3]);
     //var character = parseInt(message.source.data[4]);
@@ -189,13 +190,14 @@ actions.onGoToDefinition = function(message){
             return res.path !== '__!!MODEL!!__.d.ts';
         });
     }
+    
+    LOG_LEVEL_INFO && log("< actions.onGoToDefinition");
+    
     return response;
 };
 
 actions.onCheckSyntax = function(message){
-
-    //LOG_LEVEL_INFO && log("****************************");
-    //LOG_LEVEL_INFO && log("> actions.onCheckSyntax");
+    LOG_LEVEL_INFO && log("> actions.onCheckSyntax");
    
     var path      = message.source.data[1];
     var content   = message.source.data[2];
@@ -216,19 +218,19 @@ actions.onCheckSyntax = function(message){
         }
     };
 
-    //LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
+    LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
 
     var response = sendRequest(request);
 
-    //LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
-    //LOG_LEVEL_INFO && log("< actions.onCheckSyntax");
+    LOG_LEVEL_VERBOSE && log("response : " + JSON.stringify(response) );
+    
+    LOG_LEVEL_INFO && log("< actions.onCheckSyntax");
 
     return response;
 };
 
 actions.onCatalogUpdate = function(event){
-    //LOG_LEVEL_INFO && log("****************************");
-    //LOG_LEVEL_INFO && log("> actions.onCatalogUpdate");
+    LOG_LEVEL_INFO && log("> actions.onCatalogUpdate");
 
     var args      = event.source.data;
     var path      = args[0];//.replace(/:/g, '/');
@@ -237,22 +239,18 @@ actions.onCatalogUpdate = function(event){
     var context   = "4"; //standing for the Model context
     var project   = getProjectPath(); //Is this always true ?
 
-    try
-    {
+    try{
         var dataclasses = JSON.parse(modelJson).dataClasses;
-    }
-    catch(e)
-    {
-        //LOG_LEVEL_ERROR && log("Error while parsing the model definition");
+    }catch(e){
+        LOG_LEVEL_ERROR && log("Error while parsing the model definition");
         return;
     }
 
-    if(!dataclasses || dataclasses.length == 0)
-    {
+    if(!dataclasses || dataclasses.length == 0){
         return;
     }
 
-    var generator = require("modelGenerator");    
+    var generator = require("catalogGenerator");    
     var content   = generator.generateModel(dataclasses);
     var request   = {
         action : "updateFile",
@@ -264,9 +262,9 @@ actions.onCatalogUpdate = function(event){
         }
     };
 
-    //LOG_LEVEL_VERBOSE && log("request update MODEL: " + JSON.stringify(request) );
+    LOG_LEVEL_VERBOSE && log("request update MODEL: " + JSON.stringify(request) );
     var response  = sendRequest(request);
-    //LOG_LEVEL_VERBOSE && log("response update MODEL: " + JSON.stringify(response) );
+    LOG_LEVEL_VERBOSE && log("response update MODEL: " + JSON.stringify(response) );
 
     content = generator.generateDS(dataclasses);
     request = {
@@ -279,26 +277,25 @@ actions.onCatalogUpdate = function(event){
         }
     };
 
-    //LOG_LEVEL_VERBOSE && log("request update DS: " + JSON.stringify(request) );
+    LOG_LEVEL_VERBOSE && log("request update DS: " + JSON.stringify(request) );
     response  = sendRequest(request);
-    //LOG_LEVEL_VERBOSE && log("response update DS: " + JSON.stringify(response) );
+    LOG_LEVEL_VERBOSE && log("response update DS: " + JSON.stringify(response) );
 
-    //LOG_LEVEL_INFO && log("< actions.onCatalogUpdate");
+    LOG_LEVEL_INFO && log("< actions.onCatalogUpdate");
 
     return response;
 };
 
-/*
+/**
  * Helper Functions
  */
-function sendRequest(options)
-{
-    var path        = rootPath;
+function sendRequest(options){
+    var path        = extensionPath;
     var worker		= new SharedWorker( path + 'worker.js' , "wakanda-extension-language-tools" );
     var port	    = worker.port;
     var action      = options.action;
     var data        = options.data;
-	var timeout     = options.timeout || (studio.isDebug() ? CONFIG.MAX_WAIT_DEBUG : CONFIG.MAX_WAIT);
+  	var timeout     = options.timeout || (studio.isDebug() ? CONFIG.MAX_WAIT_DEBUG : CONFIG.MAX_WAIT[action]);
     var isTimeout   = true;
     var response    = null;
     var request     = {
@@ -306,14 +303,14 @@ function sendRequest(options)
     	"data"	: data
     };
 
-    //LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
+    LOG_LEVEL_VERBOSE && log("request : " + JSON.stringify(request) );
 
     port.onmessage	= function(event) {
 
         response = event.data;
 
-        //LOG_LEVEL_INFO && log(action + " response received");
-        //LOG_LEVEL_VERBOSE && log(JSON.stringify(response));
+        LOG_LEVEL_INFO && log(action + " response received");
+        LOG_LEVEL_VERBOSE && log(JSON.stringify(response));
 
         exitWait();
 
@@ -321,27 +318,25 @@ function sendRequest(options)
     };
 
     port.postMessage(request);
-    //LOG_LEVEL_INFO && log("request sent");
+    LOG_LEVEL_INFO && log("request sent");
 
     wait( timeout );
 
-    //isTimeout && LOG_LEVEL_INFO && log("!!!TIMEOUT!!!");
+    isTimeout && LOG_LEVEL_INFO && log("!!!TIMEOUT!!!");
 
-    //LOG_LEVEL_VERBOSE && logSharedWorkerInfo(request, response);
-    //LOG_LEVEL_ERROR && logSharedWorkerErrors(request, response);
+    LOG_LEVEL_VERBOSE && logSharedWorkerInfo(request, response);
+    LOG_LEVEL_ERROR && logSharedWorkerErrors(request, response);
 
     if(response && response.data){
-        //LOG_LEVEL_VERBOSE && log(JSON.stringify(response.data));
+        LOG_LEVEL_VERBOSE && log(JSON.stringify(response.data));
         return response.data;
     }
 
     return response;
 }
 
-function logSharedWorkerInfo(request, response)
-{
-    if (response && response.info)
-    {
+function logSharedWorkerInfo(request, response){
+    if (response && response.info){
         var content = ""
         response.info.forEach(function(line){
             content += "[SW INFO] : " + line + "\n";
@@ -350,33 +345,27 @@ function logSharedWorkerInfo(request, response)
     }
 }
 
-function logSharedWorkerErrors(request, response)
-{
-    if (response && response.type === "error")
-    {
+function logSharedWorkerErrors(request, response){
+    if (response && response.type === "error"){
         log("[SW ERROR] : action - " + request.action);
         log("[DETAILS] : " + JSON.stringify(response.data));
     }
 }
 
-function log(message)
-{
+function log(message){
     debug && studio.log(message);
 }
 
-function getProjectPath()
-{
+function getProjectPath(){
     return studio.getSelectedProjects().length > 0 ? File(studio.getSelectedProjects()[0]).parent.path : null;
 }
 
-function normalizePath(path)
-{
+function normalizePath(path){
     return path.replace(new RegExp("(//|/\\./)","g"), "/");
 }
 
-function requireModule(relPath)
-{
-  var path = normalizePath(rootPath+"/"+relPath);
+function requireModule(relPath){
+  var path = normalizePath(extensionPath+"/"+relPath);
   return require(path);
 }
 
@@ -405,16 +394,23 @@ function skipFile(params){
     return false;
 }
 
-function filterCompletion(list){
-    var filterdList = [];
-    
-    list.forEach(function(element){
-        
-        if(element.text.indexOf("__DS") !== 0){
-            
-            filterdList.push(element);
-        }
-    });
-   
-    return filterdList;
+function uselessCompletion(str, pos){
+    if (pos == 0){
+        return true;
+    }        
+
+    if (pos > str.length){
+        pos = str.length;
+    }        
+
+    if ((str[pos - 1] == "\t") || (str[pos - 1] == " ") || str[pos - 1] == ";"){
+        return true;
+    }
+
+    // no autocomplete if current row is an 'import' module
+    if(/^\s*import\s+/.test(str)) {
+        return true;    
+    }     
+
+    return false;
 }

@@ -1,0 +1,33 @@
+{
+    "realPath" : "./completion/",
+    "path" : "/Users/hamzahik/wakanda-extension-language-tools/completion/",  
+    "folders" : [
+        {
+            "name" : "2",
+            "files" : [
+                {
+                    "name" : "wakanda.ts"
+                }
+            ]
+        },
+        {
+            "name" : "4",
+            "files" : [
+                {
+                    "name" : "model.ts"
+                },
+                {
+                    "name" : "wakanda.ts"
+                }
+            ]
+        },
+        {
+            "name" : "common",
+            "files" : [
+                {
+                    "name" : "lib.core.d.ts"
+                }
+            ]
+        }
+    ]
+}

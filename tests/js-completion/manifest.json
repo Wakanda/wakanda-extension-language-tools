@@ -1,0 +1,25 @@
+{
+    "realPath" : "./tests/js-completion/",
+    "path" : "/Users/hamzahik/wakanda/test-solution/test-project/",
+    "folders": [
+        {
+            "name": "app",
+            "files": [
+                {
+                    "name": "app.js"
+                },
+                {
+                    "name": "app.1.js"
+                },
+                {
+                    "name": "app.2.js"
+                },
+                {
+                    "name": "app.3.js"
+                }
+            ],
+            "folders": [
+            ]
+        }
+    ]
+}

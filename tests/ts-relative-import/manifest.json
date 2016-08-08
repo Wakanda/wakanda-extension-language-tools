@@ -1,0 +1,30 @@
+{
+    "realPath" : "./tests/ts-relative-import/",
+    "path" : "/Users/hamzahik/wakanda/test-solution/test-project/",
+    "folders": [
+        {
+            "name": "web",
+            "files": [
+                {
+                    "name": "main.ts"
+                },
+                {
+                    "name": "TestComponent.ts"
+                },
+                {
+                    "name": "test.ts"
+                }
+            ],
+            "folders": [
+                {
+                    "name" : "node_modules",
+                    "files" : [
+                        {
+                            "name" : "super-module.d.ts"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

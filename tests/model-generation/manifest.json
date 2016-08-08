@@ -1,0 +1,26 @@
+{
+    "realPath" : "./tests/model-generation/",
+    "path" : "/Users/hamzahik/wakanda/test-solution/test-project/",
+    "folders": [
+        {
+            "name": "database",
+            "files": [
+                {
+                    "name": "model.js"
+                },
+                {
+                    "name": "model.2.js"
+                },
+                {
+                    "name": "model-object-completion.js"
+                },
+                {
+                    "name": "model-object-completion.1.js"
+                },
+                {
+                    "name": "dataClasses.json"
+                }
+            ]
+        }
+    ]
+}

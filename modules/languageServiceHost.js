@@ -1,112 +1,141 @@
-var languageServiceHost = function(args){
-
-    var ts               = this.ts = args.ts;
-    this.CompilerOptions = args.CompilerOptions || ts.getDefaultCompilerOptions();
-    this.files           = [];
-    this.store           = args.store;
-    this._logs           = args.logs || [];
-    
-    this.CompilerOptions.newLine = "\r";
-    this.CompilerOptions.allowNonTsExtensions = true;
-    this.CompilerOptions.module = 1;
-    this.CompilerOptions.moduleResolution = 1;
-    this.CompilerOptions.target = 2;
+var tsconfig = {
+    modulekind: {
+        'None': 0,
+        'CommonJS': 1,
+        'AMD': 2,
+        'UMD': 3,
+        'System': 4,
+        'ES6': 5,
+        'ES2015': 5
+    },
+    newLineKind: {
+        'CarriageReturnLineFeed': 0,
+        'LineFeed': 1
+    },
+    scriptTarget: {
+        'ES3': 0,
+        'ES5': 1,
+        'ES6': 2,
+        'ES2015': 2,
+        'Latest': 2
+    },
+    moduleResolutionKind: {
+        'Classic': 1,
+        'NodeJs': 2
+    }
 };
 
+var defaultOptions = {
+    target: tsconfig.scriptTarget.ES5,
+    module: tsconfig.modulekind.CommonJS,
+    moduleResolution: tsconfig.moduleResolutionKind.NodeJs,    
+    sourceMap: true,
+    emitDecoratorMetadata: true,
+    experimentalDecorators: true,
+    removeComments: false,
+    noImplicitAny: false,
+    allowJs:true,
+    noImplicitUseStrict: true,
+    allowNonTsExtensions : true,
+    newLine: "\r"
+};
 
+var LanguageServiceHost = function(args){
+    var self = this;
+    var ts = this.ts = args.ts;
+    this.CompilerOptions = ts.getDefaultCompilerOptions();
+    this.files = [];
+    this.store = args.store;
+    this._logs = args.logs || [];
 
-languageServiceHost.prototype.getCompilationSettings = function(){
+    args.CompilerOptions = args.CompilerOptions || {};
 
-    /*DEBUG INFO*///this._logs.push("getCompilationSettings");
+    Object.keys(args.CompilerOptions).concat(Object.keys(defaultOptions)).forEach(function (option) {
+        self.CompilerOptions[option] = args.CompilerOptions[option] || defaultOptions[option];
+    });
+};
 
+LanguageServiceHost.prototype.getCompilationSettings = function(){
     return this.CompilerOptions;
 };
 
-
-
-languageServiceHost.prototype.getScriptFileNames = function(){
-
-    /*DEBUG INFO*///this._logs.push("getScriptFileNames");
-
+LanguageServiceHost.prototype.getScriptFileNames = function(){
     return this.files;
 };
 
+LanguageServiceHost.prototype.getScriptVersion = function(filename){
+    var file = this._getFile(filename);
+    if(! file) {
+        return;
+    }
+    return file.version;
+};
 
+LanguageServiceHost.prototype.getScriptSnapshot = function(filename){
+    var file = this._getFile(filename);
+    if(! file) {
+        return null;
+    }
+    
+    var edit = file.edits[file.version];
+    
+    return {
+        getText: function(start, end) {        
+            if(edit) {
+                return edit.newText;
+            }
+            return file.content.slice(start, end);
+        },
+        getLength: function() {
+            if(edit) {
+                return edit.span.length;
+            }
+            return file.content.length;
+        },
+        getChangeRange: function getChangeRange(oldSnapshot) {
+            var edit = file.edits[file.version];            
+            if(edit) {
+                return {
+                    span: { 
+                        start: edit.span.start, 
+                        length: edit.span.length
+                    }, 
+                    newLength: edit.newLength 
+                };
+            }
+            return undefined;
+        }
+    };
+};
 
-languageServiceHost.prototype.getScriptVersion = function(filename){
-    /*DEBUG INFO*///this._logs.push("getScriptVersion");
-    /*DEBUG INFO*///this._logs.push(filename);
+LanguageServiceHost.prototype.getDefaultLibFileName = function(CompilerOptions){
+    return "lib.d.ts";
+};
 
-    if(typeof this.store[filename] === "undefined")
-    {
+LanguageServiceHost.prototype.getCurrentDirectory = function(){
+    return "";
+};
+
+LanguageServiceHost.prototype._getFile = function(filename) {
+    if(! this.store[filename] && File(filename).exists) {
+        var content = loadText(filename);
+        
         this._addFile({
             path : filename,
+            content : content,
             project : this._project
         });
     }
     
-    /*DEBUG INFO*///this._logs.push("Version : " + this.store[filename].version);    
-
-    return this.store[filename].version;
+    return this.store[filename];
 };
 
-
-
-languageServiceHost.prototype.getScriptSnapshot = function(filename){
-
-    /*DEBUG INFO*///this._logs.push("getScriptSnapshot");
-    /*DEBUG INFO*///this._logs.push(filename);
-
-    var file = this.store[filename];
-
-    return {
-        getText : function(start, end){
-
-            return file.content.slice(start, end);
-        },
-        getLength : function(){
-
-            return file.content.length;
-        },
-        getChangeRange : function getChangeRange(oldSnapshot){
-
-            return undefined;
-        }
-    }
-};
-
-languageServiceHost.prototype.getDefaultLibFileName = function(CompilerOptions){
-
-    /*DEBUG INFO*///this._logs.push("getDefaultLibFileName");
-
-    return "lib.d.ts";
-};
-
-languageServiceHost.prototype.getCurrentDirectory = function(){
-
-    /*DEBUG INFO*///this._logs.push("getCurrentDirectory");
-
-    return "directory";
-};
-
-languageServiceHost.prototype._addFile = function(options){
-
-    /*DEBUG INFO*///this._logs.push("_addFile");
-    /*DEBUG INFO*///this._logs.push(options.path);
-
+LanguageServiceHost.prototype._addFile = function(options){
+    
     var version;
     var filename = options.path;
     var content  = options.content;
-    var project  = options.project;
-
-    if(typeof content === "undefined")
-    {   
-        /*DEBUG INFO*///this._logs.push("READING NOT FOUND FILE : " + filename);       
-
-        content = loadText(filename);
-
-        /*DEBUG INFO*///this._logs.push(content.length);
-    }
+    var project  = options.project;   
 
     if(this.store[filename])
     { 
@@ -118,9 +147,10 @@ languageServiceHost.prototype._addFile = function(options){
     }
    
     this.store[filename] = {
-        "content" : content,
-        "version" : version,
-        "project" : project
+        content: content,
+        version: version,
+        project: project,
+        edits: {}
     }; 
 
     this._project = project;   
@@ -128,29 +158,25 @@ languageServiceHost.prototype._addFile = function(options){
     if(this.files.indexOf(filename) === -1)
     {
         this.files.push(filename);
-    }  
-
-    /*DEBUG INFO*///this._logs.push("Version : " + version);    
+    }
 
     return version;
 };
 
-languageServiceHost.prototype.resolveModuleNames = function(moduleNames, containingFile){
-
-    /*DEBUG INFO*///this._logs.push("resolveModuleNames");
-    /*DEBUG INFO*///this._logs.push("ContainingFile : " + containingFile);
-    /*DEBUG INFO*///this._logs.push("Modules : " + JSON.stringify(moduleNames));
-
-    var that    = this;
+LanguageServiceHost.prototype.resolveModuleNames = function(moduleNames, containingFile){
     var results = [];
-    var ext     = containingFile.match(/\.(ts|tsx)/i) ? ".ts" : ".js";
-
-    moduleNames.forEach(function(modulePath){
-
-        var project       = this.store[containingFile].project;
+    var ext     = containingFile.match(/\.(ts|tsx)/i) ? '.ts' : '.js';
+    var file = this._getFile(containingFile);
+    
+    moduleNames.forEach(function(modulePath) {
+        var project       = file.project;
         var possiblePaths = [];
-        var resolvedPath  = undefined;      
-
+        var resolvedPath;      
+        
+        ['d.ts', 'ts', 'js'].forEach(function(extension){		
+		    possiblePaths.push(possiblePath + '.' + extension);
+		});
+        
         if(modulePath.indexOf("./") === 0)
         {
             var parentPath   = (new File(containingFile)).parent.path;
@@ -160,13 +186,11 @@ languageServiceHost.prototype.resolveModuleNames = function(moduleNames, contain
         }
         else
         {
-            possiblePaths.push(normalizePath(project + "modules/" + modulePath + ext));
-            possiblePaths.push(normalizePath(project + "Modules/" + modulePath + ext));
+            possiblePaths.push(normalizePath(project + 'modules/' + modulePath + ext));
+            possiblePaths.push(normalizePath(project + 'Modules/' + modulePath + ext));
         }
-
+        
         possiblePaths.some(function(path){
-
-            that._logs.push("Possible Path : " + path);
             if(new File(path).exists)
             {
                 resolvedPath = path;
@@ -176,18 +200,17 @@ languageServiceHost.prototype.resolveModuleNames = function(moduleNames, contain
 
             return false;
         });
-
-        results.push({
-            "resolvedFileName" : resolvedPath
-        });
+        results.push(! resolvedPath ? undefined : { resolvedFileName: resolvedPath });
     });
 
     return results;
 };
 
-module.exports = languageServiceHost;
 
-function normalizePath(path)
-{
+function normalizePath(path){
     return path.replace(new RegExp("(//|/\\./)","g"), "/");
+}
+
+if(typeof window === "undefined"){
+    module.exports = LanguageServiceHost;
 }
